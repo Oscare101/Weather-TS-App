@@ -1,20 +1,63 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StatusBar, useColorScheme } from 'react-native'
+import MainWeatherScreen from './screens/MainWeatherScreen'
+import { Provider, useDispatch, useSelector } from 'react-redux'
+import { store } from './redux/store'
+import { RootState } from './redux'
+import { useEffect } from 'react'
+import * as NavigationBar from 'expo-navigation-bar'
+import { setTheme } from './redux/theme'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import colors from './constans/colors'
+import { GetTheme } from './functions/functions'
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
+  function InAppComponent() {
+    const dispatch = useDispatch()
+    const systemTheme = useColorScheme()
+    const { theme } = useSelector((state: RootState) => state.theme)
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+    async function GetThemeFunc() {
+      const theme = await AsyncStorage.getItem('theme')
+      if (theme) {
+        dispatch(setTheme(theme))
+      }
+    }
+
+    useEffect(() => {
+      GetThemeFunc()
+    }, [])
+
+    useEffect(() => {
+      NavigationBar.setBackgroundColorAsync(
+        GetTheme(systemTheme, theme) === 'dark' ? colors.DarkBG : colors.LightBG
+      )
+      NavigationBar.setButtonStyleAsync(
+        GetTheme(systemTheme, theme) === 'dark' ? 'light' : 'dark'
+      )
+    }, [systemTheme, theme])
+
+    return (
+      <>
+        <StatusBar
+          barStyle={
+            GetTheme(systemTheme, theme) === 'dark'
+              ? 'light-content'
+              : 'dark-content'
+          }
+          backgroundColor={
+            GetTheme(systemTheme, theme) === 'dark'
+              ? colors.DarkBG
+              : colors.LightBG
+          }
+        />
+        <MainWeatherScreen />
+      </>
+    )
+  }
+
+  return (
+    <Provider store={store}>
+      <InAppComponent />
+    </Provider>
+  )
+}
