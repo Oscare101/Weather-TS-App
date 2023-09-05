@@ -8,3 +8,7 @@ cd Weather-TS-App/
 npm i
 npx expo start
 ```
+
+screenshot
+
+![app](./assets/screen.jpg 'app')
